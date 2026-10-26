@@ -1,0 +1,263 @@
+# =============================================================================
+#  大肥鱼 · 配置文件
+# -----------------------------------------------------------------------------
+#  第一次用：只填 provider.api_key 一处，其余默认值都能跑起来。
+#  改完保存，重启机器人生效（关掉窗口，再双击「肥鱼饭堂.bat」）。
+#  在网页控制台里点保存也会写回这个文件——注意：保存后注释会丢，
+#  想留注释就直接编辑本文件，别在控制台里点保存。
+# -----------------------------------------------------------------------------
+#  格式提醒：缩进用两个空格，冒号后面要有一个空格；时间一律加引号 '09:00'，
+#  不加引号会被 YAML 当成数字，作息就乱了。
+# =============================================================================
+
+# --- 基本 -------------------------------------------------------------------
+name: 大肥鱼                     # 机器人显示的名字
+db_path: data/bot.db             # 记忆和判定记录存这里
+
+# =============================================================================
+#  一、必填：模型接口
+# =============================================================================
+provider:
+  base_url: https://api.deepseek.com/v1/chat/completions   # 官方地址，一般不用动
+  api_key: ""                    # ★ 必填：https://platform.deepseek.com/api_keys 申请，形如 sk-xxxx
+  model: deepseek-chat           # deepseek-chat 便宜够用；deepseek-reasoner 更聪明但更慢更贵
+  temperature: 0.85              # 越大越发散；聊天 0.8~1.0，正经问答 0.3~0.6
+  max_tokens: 160                # 单条回复长度上限
+  timeout: 20.0                  # 单次请求超时（秒）
+  disable_thinking: true         # 关掉思考省钱；想看它认真推理就改 false
+  reasoning_effort: ""           # 留空不传；开思考时可选 low / medium / high
+  reasoning_headroom: 200        # 开思考时额外给的输出余量
+  warn_reasoning_ratio: 0.5      # 思考占输出的比例超过这个值，日志会提醒你烧钱
+
+# =============================================================================
+#  二、微信：看哪些群、怎么发
+# =============================================================================
+wechat:
+  backend: auto                  # auto 自动选；wechatauto 真微信；console 假微信（只演示界面）
+  # 监听范围
+  #   whitelist  只回白名单里的群（默认，最安全）
+  #   at_only    只回 @ 它的消息（最省心）
+  #   all        全部群和私聊都看（不建议）
+  #   off        哪个群都不看
+  listen_mode: all                 # whitelist 只回白名单 / at_only 只回被 @ 的 / all 全部监听 / off 只记不回
+  listen_groups: []              # 白名单群名（仅 whitelist 模式用）。发布版默认全部监听，想安静点可换成白名单
+  listen_private: true           # 要不要管私聊（发布版默认开启，跟「全部监听」配套）
+  private_targets: []            # 开了私聊后只回这些人的私聊；留空=全部
+  poll_interval: 1.0             # 多久扫一次新消息（秒）
+  send_timeout: 10.0             # 发一条最多等多久
+  require_uia: true              # true=只用界面自动化发，发不出去就报错（更安全）
+  send_backend: uia              # uia 界面自动化；ocr 截图点击（不推荐）
+  require_consent: false         # true=每次发送前人工确认
+  read_links: true               # 别人发链接要不要去读一读
+  link_max_chars: 1200           # 读链接最多取多少字
+  read_stickers: true            # 能不能看懂图片/表情（要配合 vision）
+
+# =============================================================================
+#  三、主人：谁是你
+# =============================================================================
+owner:
+  enabled: true
+  wxid: ""                       # 你的微信 ID；不知道就留空，用昵称也行
+  nickname: ""                   # 你的微信昵称，填了它才认得出主人
+  address_as: 老大               # 它怎么称呼你
+  ai_name: 大肥鱼
+
+# =============================================================================
+#  四、接话策略：什么时候开口
+# =============================================================================
+policy:
+  preset: normal                 # quiet 安静 / normal 正常 / lively 活泼（控制台里一键切）
+  triggers: [大肥鱼, 鲸鱼娘, 小鲸鱼, deepseek]   # 命中就当在叫它
+  score_threshold: 7             # 群里每条消息打分 0-10，到这个分才接；调低更爱说话
+  judge_enabled: true            # 关掉就只认关键词，不再花 token 判分
+  judge_max_tokens: 8
+  context_window: 20             # 判分时参考最近几条消息
+  context_minutes: 15            # 只参考最近多少分钟
+  observation: false             # ★观察模式：只看不接，只记日志。新手建议先开一天
+  max_reply_chars: 120           # 单条回复最长字数
+  max_consecutive_turns: 3       # 最多连着说几句
+  group_max_tokens: 80
+  private_cooldown_ms: 1500      # 私聊两条之间至少隔多久
+  min_messages_between_interjections: 3   # 主动插话前至少要有几条别人的消息
+  interject_window_seconds: 300
+  interject_limit: 2             # 5 分钟内最多主动插话几次
+  reply_window_seconds: 600
+  reply_window_limit: 5          # 10 分钟内最多回几次
+
+budget:
+  per_hour: 30                   # 每小时最多回几条
+  per_group_concurrent: 1        # 同一个群同时只处理一个话题
+  min_gap_seconds: 3             # 两条消息至少隔几秒
+
+schedule:
+  enabled: true
+  quiet_start: '00:00'           # 安静时段（这个点以后闭嘴）
+  quiet_end: '08:00'             # 安静时段结束
+  active_start: '09:00'
+  active_end: '23:00'
+  active_bonus: 2                # 活跃时段判分加分
+  quiet_allow_at: false          # 安静时段被 @ 了要不要破例
+
+proactive:
+  enabled: true
+  active_start: '09:00'
+  active_end: '23:00'
+  idle_minutes: 90               # 群里安静这么久它才可能自己起话头
+  interval_minutes: 10           # 多久检查一次机会
+  probability: 0.5               # 有便宜可占时真开口的概率
+  daily_limit: 2                 # 每天最多主动说几次
+  targets: []                    # 留空=白名单群都可以；也可以写群名
+
+# =============================================================================
+#  五、人格与心情
+# =============================================================================
+persona:
+  base_file: personas/base.md    # 人设文件，想改造它就改这个
+  aliases: [大肥鱼, 肥鱼, 鲸鱼娘, 小鲸鱼, 小鱼]
+  group_files: {}                # 给某个群单独设人设：{"摸鱼群": "personas/摸鱼.md"}
+  temporary_state: true
+  state_prompt: personas/state.md
+  tone: 3                        # 语气强度 1~5
+  mode_dir: personas/modes       # 群友可以喊「切工作模式」
+  mode_ttl_minutes: 60           # 模式多久自动失效
+
+mood:
+  enabled: true
+  start: 50                      # 初始心情 0-100
+  decay_per_hour: 4
+  insult_delta: -18              # 被骂掉多少
+  praise_delta: 10               # 被夸涨多少
+  quiet_below: 15                # 低于这个值就不爱说话
+  cheerful_above: 85
+  weather_sync: false            # 跟着天气变心情（需要 info.weather）
+  city: ""
+
+# =============================================================================
+#  六、增强功能（用不上就关）
+# =============================================================================
+quick:                           # 秒回：简单问题走最快通道
+  enabled: true
+  private_reply: true
+  group_on_trigger: true
+  cooldown: 20
+
+echo:                            # 复读：群里刷同一个词时跟着乐
+  enabled: true
+  probability: 0.35
+  cooldown: 120
+  max_chars: 8
+
+profile:                         # 群友画像：给常聊的人记特点
+  enabled: true
+  top_n: 5
+
+info:                            # 天气 / 节假日
+  enabled: true
+  weather: true
+  holidays: true
+  interval_days: 3
+  holiday_lookahead_days: 7
+
+memes:                           # 表情包：素材放 data/memes/<包名>/ 后在控制台里启用
+  enabled: false                 # 没有素材包就保持关闭
+  probability: 0.25
+  cooldown_seconds: 120
+  daily_limit: 10
+  packs: []
+  count_in_budget: true
+
+split:                           # 长回复拆成几条发，更像真人
+  enabled: false
+  min_chars: 40
+  max_parts: 3
+  gap_min: 0.8
+  gap_max: 2.5
+
+poke:                            # 被拍一拍
+  enabled: true
+  reply_back: true
+
+draw:                            # 画画（本地涂鸦或接外部画图接口）
+  enabled: false
+  pil: true
+  openai: false
+  dashscope: false
+  idle_minutes: 45
+  probability: 0.15
+  daily_limit: 2
+  targets: []
+  api_url: ""
+  api_key: ""
+  model: ""
+  style_prompt: 简笔画风格，干净的线条，白底
+
+vision:                          # 识图：看懂别人发的图片
+  enabled: false
+  provider: zhipu
+  api_key: ""
+  base_url: ""
+  model: ""
+  prompt: ""
+  max_chars: 80
+  max_tokens: 120
+  timeout: 30.0
+
+asr:                             # 语音转文字
+  enabled: true
+  model: base
+  language: zh
+  device: cpu
+  compute_type: int8
+  endpoint: https://hf-mirror.com
+  initial_prompt: 群聊里的日常口语，DSH、DeepSeek、微信、机器人、识别、后台、提示词、人格
+
+search:                          # 联网搜索（自建 searxng 或兼容接口）
+  enabled: false
+  provider: searxng
+  base_url: http://127.0.0.1:8888/search
+  api_key: ""
+  max_results: 3
+  cache_ttl: 1800
+  timeout: 8.0
+
+decision_external:               # 把判分交给外部服务（进阶，一般不用）
+  enabled: false
+  base_url: ""
+  api_key: ""
+  timeout: 8.0
+
+notify:                          # 出问题发邮件通知
+  enabled: false
+  email: ""
+  smtp_host: smtp.qq.com
+  smtp_port: 465
+  username: ""
+  password: ""
+
+fallback:                        # 兜底话术
+  timeout_text: 卡了一下，等会儿再说。
+  no_search_text: 这个我查不到，等会儿再试。
+  empty_text: 嗯。
+
+# =============================================================================
+#  七、守护：崩溃自愈
+# =============================================================================
+supervisor:
+  enabled: true
+  stale_seconds: 120             # 心跳断这么久算卡死
+  check_seconds: 15              # 多久检查一次
+  max_restarts: 3                # 时间窗内最多重启几次
+  restart_window_seconds: 900
+
+watchdog:
+  enabled: true
+  check_seconds: 30
+  max_send_failures: 5           # 连续发送失败几次就自己重启
+
+# =============================================================================
+#  八、控制台
+# =============================================================================
+web:
+  enabled: true
+  host: 127.0.0.1                # 只给本机访问；改成 0.0.0.0 会暴露到局域网
+  port: 8010

@@ -1,0 +1,41 @@
+# ===== 运行时数据：里面是你的聊天记录、记忆库、日志，绝对不要提交 =====
+config.yaml
+data/*
+!data/.gitkeep
+!data/memes/
+data/memes/*
+!data/memes/README.md
+logs/*
+!logs/.gitkeep
+backups/
+wechatauto_logs/
+*.db
+*.db-shm
+*.db-wal
+bot.lock
+heartbeat.json
+stop.flag
+window.json
+CONSENT
+_*.txt
+@AutomationLog.txt
+
+# ===== Python =====
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ===== 编辑器 / 系统 =====
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== 截图草稿 =====
+docs/screenshots/_draft/
